@@ -13,7 +13,9 @@
                 "dbaeumer.vscode-eslint",
                 "esbenp.prettier-vscode",
                 "ms-azuretools.vscode-docker",
-                "connor4312.esbuild-problem-matchers"
+                "connor4312.esbuild-problem-matchers",
+                "ms-vscode.extension-test-runner",
+                "exiasr.hadolint"
             ]
         }
     },
