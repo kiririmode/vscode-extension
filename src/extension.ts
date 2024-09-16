@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-import * as path from "path";
 
 const PREFIX = "promptis";
 const participantId = "promptis.promptis";
@@ -32,7 +31,7 @@ const commandMap: { [key: string]: Command } = {
   },
   runPromptFiles: {
     id: `${PREFIX}.runPromptFiles`,
-    f: findPromptFiles,
+    f: runPromptFiles,
   },
 };
 
@@ -130,20 +129,23 @@ const chatHandler: vscode.ChatRequestHandler = async (
 // - 4. プロンプトファイルの結果を保存する
 
 /**
- * 指定したディレクトリ内のファイル一覧を取得する関数
- * @param directoryPath - ファイル一覧を取得するディレクトリのパス
- * @returns ファイル名の配列
+ * 指定したディレクトリ内のファイルを再帰的に取得する関数
+ *
+ * @param {string} directoryPath - ファイル一覧を取得するディレクトリのパス
+ * @returns {fs.Dirent[]} - ディレクトリ内のファイルエントリの配列
+ *
+ * @example
+ * const files = getFilesInDirectory('/path/to/directory');
+ * console.log(files);
  */
-function getFilesInDirectory(directoryPath: string): string[] {
+function getFilesInDirectory(directoryPath: string): fs.Dirent[] {
   try {
     const entries = fs.readdirSync(directoryPath, {
       withFileTypes: true,
       recursive: true,
     });
 
-    return entries
-      .filter((entry) => entry.isFile())
-      .map((entry) => path.join(directoryPath, entry.name));
+    return entries.filter((entry) => entry.isFile());
   } catch (error) {
     console.error("Failed to read directory:", error);
     vscode.window.showErrorMessage("Failed to read directory: " + error);
@@ -151,17 +153,45 @@ function getFilesInDirectory(directoryPath: string): string[] {
   }
 }
 
-function findPromptFiles() {
+/**
+ * 指定されたプロンプトディレクトリからファイルを検索します。
+ * プロンプトディレクトリが設定されていない場合、エラーメッセージを表示し、nullを返します。
+ *
+ * @returns {string[] | null} プロンプトディレクトリ内のファイルリスト、またはnull
+ */
+function findPromptFiles(): fs.Dirent[] | null {
+  const CONFIG_SECTION = "promptis";
+  const CONFIG_KEY = "promptDirectory";
+
   const promptDirectory = vscode.workspace
-    .getConfiguration("promptis")
-    .get("promptDirectory", "");
+    .getConfiguration(CONFIG_SECTION)
+    .get(CONFIG_KEY, "");
+
   if (promptDirectory) {
-    const files = getFilesInDirectory(promptDirectory);
+    const dirents = getFilesInDirectory(promptDirectory);
     vscode.window.showInformationMessage(
-      `Found ${files.length} files in ${promptDirectory}: ${files.join(", ")}`
+      `Found ${dirents.length} files in ${promptDirectory}`
     );
+    return dirents;
   } else {
     vscode.window.showErrorMessage("Prompt directory is not set");
+    return null;
+  }
+}
+
+/**
+ * プロンプトファイルを順番に実行する関数
+ *
+ * @param {vscode.ExtensionContext} context - 拡張機能のライフサイクルを管理するためのコンテキストオブジェクト
+ */
+function runPromptFiles(context: vscode.ExtensionContext): void {
+  const dirents = findPromptFiles();
+  if (!dirents) {
+    return;
+  }
+
+  for (const dirent of dirents) {
+    vscode.window.showInformationMessage(`Running ${dirent.name}`);
   }
 }
 
