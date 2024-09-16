@@ -1,6 +1,7 @@
 {
   "name": "promptis",
-  "displayName": "promptis",
+  "publisher": "kiririmode",
+  "displayName": "Promptis",
   "description": "Tool for prompt chaining",
   "version": "0.0.1",
   "engines": {
@@ -12,10 +13,33 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "chatParticipants": [
+      {
+        "id": "promptis.promptis",
+        "name": "promptis",
+        "fullName": "promptis",
+        "description": "Meow! What can I teach you?",
+        "isSticky": true
+      }
+    ],
+    "configuration": {
+      "title": "Promptis",
+      "properties": {
+        "promptis.promptDirectory": {
+          "type": "string",
+          "default": "",
+          "description": "The directory where prompt files are stored."
+        }
+      }
+    },
     "commands": [
       {
         "command": "promptis.helloWorld",
-        "title": "Hello World"
+        "title": "PrompTis: Hello World"
+      },
+      {
+        "command": "promptis.selectPromptDirectory",
+        "title": "PrompTis: プロンプトディレクトリを選択する"
       }
     ]
   },
@@ -31,19 +55,19 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
-    "test": "xvfb-run -a vscode-test"
+    "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.93.0",
     "@types/mocha": "^10.0.7",
     "@types/node": "20.x",
+    "@types/vscode": "^1.93.0",
     "@typescript-eslint/eslint-plugin": "^8.3.0",
     "@typescript-eslint/parser": "^8.3.0",
-    "eslint": "^9.9.1",
-    "esbuild": "^0.23.1",
-    "npm-run-all": "^4.1.5",
-    "typescript": "^5.5.4",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "esbuild": "^0.23.1",
+    "eslint": "^9.9.1",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.5.4"
   }
 }
