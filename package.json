@@ -40,6 +40,10 @@
       {
         "command": "promptis.selectPromptDirectory",
         "title": "PrompTis: プロンプトディレクトリを選択する"
+      },
+      {
+        "command": "promptis.runPromptFiles",
+        "title": "PrompTis: プロンプトを実行する"
       }
     ]
   },

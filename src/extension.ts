@@ -5,6 +5,37 @@ import * as path from "path";
 const PREFIX = "promptis";
 const participantId = "promptis.promptis";
 
+/**
+ * コマンドのインターフェースを定義します。
+ *
+ * @interface Command
+ * @property {string} id - コマンドの識別子
+ * @property {(context: vscode.ExtensionContext, ...args: any[]) => void} f - コマンドが実行されたときに呼び出される関数
+ * @param {vscode.ExtensionContext} context - 拡張機能のライフサイクルを管理するためのコンテキストオブジェクト
+ * @param {...any[]} args - コマンドに渡される追加の引数
+ */
+interface Command {
+  id: string;
+  f: (context: vscode.ExtensionContext, ...args: any[]) => void;
+}
+
+const commandMap: { [key: string]: Command } = {
+  helloWorld: {
+    id: `${PREFIX}.helloWorld`,
+    f: () => {
+      vscode.window.showInformationMessage("Hello World from promptis!");
+    },
+  },
+  selectPromptDirectory: {
+    id: `${PREFIX}.selectPromptDirectory`,
+    f: selectPromptDirectory,
+  },
+  runPromptFiles: {
+    id: `${PREFIX}.runPromptFiles`,
+    f: findPromptFiles,
+  },
+};
+
 export function activate(context: vscode.ExtensionContext) {
   // ParticipantをVSCodeに登録
   const promptis = vscode.chat.createChatParticipant(
@@ -17,18 +48,14 @@ export function activate(context: vscode.ExtensionContext) {
     "icon.gif"
   );
 
-  // コマンドを登録
-  context.subscriptions.push(
-    vscode.commands.registerCommand(`${PREFIX}.helloWorld`, () => {
-      vscode.window.showInformationMessage("Hello World from promptis!");
-    })
-  );
-  context.subscriptions.push(
-    vscode.commands.registerCommand(
-      `${PREFIX}.selectPromptDirectory`,
-      selectPromptDirectory
-    )
-  );
+  // コマンドをVSCodeに登録
+  for (const [key, value] of Object.entries(commandMap)) {
+    context.subscriptions.push(
+      vscode.commands.registerCommand(value.id, (...args) =>
+        value.f(context, ...args)
+      )
+    );
+  }
 }
 
 /**
@@ -121,6 +148,20 @@ function getFilesInDirectory(directoryPath: string): string[] {
     console.error("Failed to read directory:", error);
     vscode.window.showErrorMessage("Failed to read directory: " + error);
     return [];
+  }
+}
+
+function findPromptFiles() {
+  const promptDirectory = vscode.workspace
+    .getConfiguration("promptis")
+    .get("promptDirectory", "");
+  if (promptDirectory) {
+    const files = getFilesInDirectory(promptDirectory);
+    vscode.window.showInformationMessage(
+      `Found ${files.length} files in ${promptDirectory}: ${files.join(", ")}`
+    );
+  } else {
+    vscode.window.showErrorMessage("Prompt directory is not set");
   }
 }
 
