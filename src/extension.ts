@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
+import path from "path";
 
 const PREFIX = "promptis";
 const participantId = "promptis.promptis";
@@ -188,6 +189,25 @@ function runPromptFiles(context: vscode.ExtensionContext): void {
   const dirents = findPromptFiles();
   if (!dirents) {
     return;
+  }
+
+  for (const dirent of dirents) {
+    if (dirent.isFile()) {
+      vscode.window.showInformationMessage(`Running ${dirent.name}`);
+      const filePath = path.join(dirent.parentPath, dirent.name);
+      fs.readFile(filePath, "utf8", (err, data) => {
+        if (err) {
+          vscode.window.showErrorMessage(`Failed to read ${filePath}`);
+          return;
+        }
+        vscode.window.showInformationMessage(
+          `Content of ${dirent.name}: ${data}`
+        );
+        const craftedPrompts = [vscode.LanguageModelChatMessage.User(data)];
+      });
+    } else {
+      vscode.window.showErrorMessage(`${dirent.name} is not a file`);
+    }
   }
 
   for (const dirent of dirents) {
